@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:json2model/helpers/convertHelpers.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,6 +15,52 @@ class _HomePageState extends State<HomePage> {
   bool _isConverting = false;
   TextEditingController _jsonTextController = TextEditingController();
   TextEditingController _modelTextController = TextEditingController();
+
+  void copyModel() async {
+    await Clipboard.setData(ClipboardData(text: _modelTextController.text));
+    ConvertHelpers().showSnackBar("Model Copied.", context, 1);
+  }
+  void downloadModelFile(){
+    ConvertHelpers().showSnackBar("Coming Soon..", context, 1);
+  }
+  void convertData() async {
+    print("CONVERT BIG");
+    if (_isConverting) {
+      setState(() {
+        _isConverting = false;
+      });
+      print("IS CONVERTING");
+    }
+    setState(() {
+      _isConverting = true;
+    });
+    if (_jsonTextController.text.trim().isNotEmpty) {
+      bool validStatus =
+          ConvertHelpers().checkIsJsonValid(_jsonTextController.text.trim());
+      if (!validStatus) {
+        ConvertHelpers().showSnackBar("Invalid JSON", context, 2);
+        setState(() {
+          _isConverting = false;
+        });
+        return;
+      }
+      print("TILL HERE");
+      Map<String, dynamic> jsonData =
+          jsonDecode(_jsonTextController.text.trim());
+      print("JSON DATA");
+
+      String dataAfterConverting =
+          await ConvertHelpers().generateModelClasses("ModelName", jsonData);
+      print(dataAfterConverting);
+      _modelTextController.text = dataAfterConverting;
+    } else {
+      ConvertHelpers().showSnackBar("Please Enter JSON data.", context, 2);
+    }
+    setState(() {
+      _isConverting = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,7 +88,6 @@ class _HomePageState extends State<HomePage> {
                               elevation: 2,
                               margin: const EdgeInsets.symmetric(vertical: 8.0),
                               child: Container(
-                                color: Colors.blue,
                                 height: height * 0.4, // Adjust height as needed
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -50,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                                     decoration: InputDecoration(
                                       hintStyle:
                                           TextStyle(fontSize: width * 0.05),
-                                      hintText: "Enter text here",
+                                      hintText: "Enter JSON here",
                                       border: InputBorder.none,
                                     ),
                                     maxLines: null,
@@ -67,74 +113,64 @@ class _HomePageState extends State<HomePage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     GestureDetector(
-                                      onTap: () {
-                                        if (_isConverting) {
-                                          return;
-                                        }
-                                        setState(() {
-                                          _isConverting = true;
-                                        });
-                                        if (_jsonTextController.text
-                                            .trim()
-                                            .isNotEmpty) {
-                                          bool validStatus = ConvertHelpers()
-                                              .checkIsJsonValid(
-                                                  _jsonTextController.text
-                                                      .trim());
-                                          if (!validStatus) {
-                                            ConvertHelpers().showSnackBar(
-                                                "Invalid JSON", context, 2);
-                                          }
-                                        }
-                                        setState(() {
-                                          _isConverting = false;
-                                        });
+                                      onTap: () async {
+                                        convertData();
                                       },
                                       child: Container(
                                         width: width * 0.3,
-                                        height: width * 0.05,
+                                        height: width * 0.07,
                                         decoration: BoxDecoration(
                                           color: Colors.white,
                                           borderRadius:
-                                              BorderRadius.circular(15),
+                                              BorderRadius.circular(10),
                                         ),
                                         child: Center(
                                             child: Text(
                                           "Convert",
                                           style:
-                                              TextStyle(fontSize: width * 0.02),
+                                              TextStyle(fontSize: width * 0.05),
                                         )),
                                       ),
                                     ),
-                                    SizedBox(height: height * 0.05),
+                                    SizedBox(height: height * 0.01),
                                     Wrap(
                                       spacing: 5,
                                       children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue[100],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          height: width * 0.03,
-                                          width: width * 0.03,
-                                          child: Center(
-                                            child: Icon(Icons.copy,
-                                                color: Colors.white,
-                                                size: width * 0.015),
+                                        GestureDetector(
+                                          onTap: () async {
+                                            copyModel();
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue[100],
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            height: width * 0.1,
+                                            width: width * 0.1,
+                                            child: Center(
+                                              child: Icon(Icons.copy,
+                                                  color: Colors.white,
+                                                  size: width * 0.055),
+                                            ),
                                           ),
                                         ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue[100],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                        GestureDetector(
+                                          onTap: () {
+                                            downloadModelFile();
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue[100],
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            height: width * 0.1,
+                                            width: width * 0.1,
+                                            child: Icon(Icons.download,
+                                                color: Colors.white,
+                                                size: width * 0.055),
                                           ),
-                                          height: width * 0.03,
-                                          width: width * 0.03,
-                                          child: Icon(Icons.download,
-                                              color: Colors.white,
-                                              size: width * 0.015),
                                         ),
                                       ],
                                     ),
@@ -154,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                                     decoration: InputDecoration(
                                       hintStyle:
                                           TextStyle(fontSize: width * 0.05),
-                                      hintText: "Enter additional text here",
+                                      hintText: "Model will be displayed here",
                                       border: InputBorder.none,
                                     ),
                                     maxLines: null,
@@ -211,57 +247,7 @@ class _HomePageState extends State<HomePage> {
                                       children: [
                                         GestureDetector(
                                           onTap: () async {
-                                            print("CONVERT BIG");
-                                            if (_isConverting) {
-                                              setState(() {
-                                                _isConverting = false;
-                                              });
-                                              print("IS CONVERTING");
-                                            }
-                                            setState(() {
-                                              _isConverting = true;
-                                            });
-                                            if (_jsonTextController.text
-                                                .trim()
-                                                .isNotEmpty) {
-                                              bool validStatus =
-                                                  ConvertHelpers()
-                                                      .checkIsJsonValid(
-                                                          _jsonTextController
-                                                              .text
-                                                              .trim());
-                                              if (!validStatus) {
-                                                ConvertHelpers().showSnackBar(
-                                                    "Invalid JSON", context, 2);
-                                                setState(() {
-                                                  _isConverting = false;
-                                                });
-                                                return;
-                                              }
-                                              print("TILL HERE");
-                                              Map<String, dynamic> jsonData =
-                                                  jsonDecode(_jsonTextController
-                                                      .text
-                                                      .trim());
-                                              print("JSON DATA");
-
-                                              String dataAfterConverting =
-                                                  await ConvertHelpers()
-                                                      .generateModelClasses(
-                                                          "ModelName",
-                                                          jsonData);
-                                              print(dataAfterConverting);
-                                              _modelTextController.text =
-                                                  dataAfterConverting;
-                                            } else {
-                                              ConvertHelpers().showSnackBar(
-                                                  "Please Enter JSON data.",
-                                                  context,
-                                                  2);
-                                            }
-                                            setState(() {
-                                              _isConverting = false;
-                                            });
+                                            convertData();
                                           },
                                           child: Container(
                                             width: double.infinity,
