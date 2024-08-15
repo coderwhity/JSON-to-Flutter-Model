@@ -55,12 +55,10 @@ class ConvertHelpers {
 
   void _generateModelClassStructureCacheForList(
       String rootClassName, List<dynamic> jsonList) {
-    // if (classCache.containsKey(rootClassName)) {
-    //   return;
-    // }
+ 
     classCache[rootClassName] = {};
     int maxAttributesIndex = 0;
-    // jsonList.forEach((key) {
+    
     for (int i = 0; i < jsonList.length; i++) {
       Map<String, dynamic> dataInMap = jsonList[i] as Map<String, dynamic>;
       if (dataInMap.entries.length >
@@ -78,27 +76,26 @@ class ConvertHelpers {
       String valueType = "dynamic";
       if (value is String) {
         valueType = "String";
-        // print("Is String");
-        // return String;
+       
       } else if (value is int) {
         valueType = "int";
-        // print("Is Int");
+       
       } else if (value is double) {
         valueType = "double";
-        // print("Is Double");
+     
       } else if (value is bool) {
         valueType = "bool";
-        // print("Is Bool");
+        
       } else if (value is List) {
         valueType = "List<dynamic>";
-        // print("Is Bool");
+ 
       } else if (value is Map) {
         valueType = key + "Model";
         _generateModelClassStructureCache(key + "Model", value);
-        // print("Is Map");
+   
       } else {
         valueType = "dynamic";
-        // print("Is dynamic");
+ 
       }
     Map<dynamic, dynamic> valueOfClass = classCache[rootClassName];
     valueOfClass[key] = valueType;

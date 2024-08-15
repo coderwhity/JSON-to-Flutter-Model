@@ -18,41 +18,24 @@ class _HomePageState extends State<HomePage> {
   TextEditingController _modelTextController = TextEditingController();
 
   void copyModel() async {
-    await Clipboard.setData(ClipboardData(text: _modelTextController.text));
+    String text = _modelTextController.text.trim();
+    if (text.isEmpty) {
+      ConvertHelpers().showSnackBar(
+          "Model text is empty. Please enter valid JSON data.", context, 2);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: text));
     ConvertHelpers().showSnackBar("Model Copied.", context, 1);
   }
 
   void downloadModelFile() async {
-    my_worker.downloadModelFile(_modelTextController.text, context);
-    // String modelCode = _modelTextController.text;
-    // if (kIsWeb) {
-    //   print("DOWNLOADING FOR WEB");
-    //   // Web platform
-    //   final bytes = utf8.encode(modelCode);
-    //   final blob = html.Blob([Uint8List.fromList(bytes)]);
-    //   final url = html.Url.createObjectUrlFromBlob(blob);
-
-    //   final anchor = html.AnchorElement(href: url)
-    //     ..setAttribute('download', 'json2model.dart')
-    //     ..click();
-
-    //   html.Url.revokeObjectUrl(url);
-
-    //   ConvertHelpers().showSnackBar("Model file downloaded", context, 1);
-    // } else if (io.Platform.isAndroid || io.Platform.isIOS) {
-    //   // Mobile platform
-    //   // Mobile platforms do not support file downloads directly, so you will need to use plugins like `flutter_downloader` or `path_provider`
-    //   ConvertHelpers().showSnackBar(
-    //       "File download is not supported on mobile platforms.", context, 2);
-    // } else {
-    //   // Desktop platforms (Windows, macOS, Linux)
-    //   // For desktop platforms, you can use `dart:io` to write files
-    //   // final file = io.File('path/to/your/directory/json2model.dart');
-    //   // await file.writeAsString(modelCode);
-
-    //   // ConvertHelpers().showSnackBar("Model file downloaded to ${file.path}", context, 1);
-    // }
-    // ConvertHelpers().showSnackBar("Coming Soon..", context, 1);
+    String text = _modelTextController.text.trim();
+    if (text.isEmpty) {
+      ConvertHelpers().showSnackBar(
+          "Model text is empty. Please enter valid JSON data.", context, 2);
+      return;
+    }
+    my_worker.downloadModelFile(text, context);
   }
 
   void convertData() async {
@@ -84,6 +67,11 @@ class _HomePageState extends State<HomePage> {
         dataAfterConverting = await ConvertHelpers().generateModelClasses(
             "ModelName", jsonData as Map<String, dynamic>);
       } else if (jsonData is List<dynamic>) {
+        if ((jsonData as List<dynamic>).isEmpty) {
+          ConvertHelpers().showSnackBar(
+              "Invalid JSON.", context, 2);
+          return;
+        }
         dataAfterConverting = await ConvertHelpers()
             .generateModelClassesInputIsList("ModelName", jsonData);
       }
@@ -109,7 +97,7 @@ class _HomePageState extends State<HomePage> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               bool isSmallScreen =
-                  constraints.maxWidth < 800; // Adjust the breakpoint as needed
+                  constraints.maxWidth < 800; 
               double height = constraints.maxHeight;
               double width = constraints.maxWidth;
 
@@ -124,7 +112,7 @@ class _HomePageState extends State<HomePage> {
                               elevation: 2,
                               margin: const EdgeInsets.symmetric(vertical: 8.0),
                               child: Container(
-                                height: height * 0.4, // Adjust height as needed
+                                height: height * 0.4, 
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextField(
@@ -143,7 +131,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                             Card(
                               color: Colors.transparent,
-                              // margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              
+                              
                               child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -218,7 +207,8 @@ class _HomePageState extends State<HomePage> {
                               elevation: 2,
                               margin: const EdgeInsets.symmetric(vertical: 8.0),
                               child: Container(
-                                height: height * 0.4, // Adjust height as needed
+                                height: height * 0.4,
+                                
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextField(
@@ -248,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                               child: Container(
                                 margin:
                                     const EdgeInsets.symmetric(horizontal: 8.0),
-                                height: 150, // Adjust height as needed
+                                height: 150, 
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextField(
@@ -357,7 +347,7 @@ class _HomePageState extends State<HomePage> {
                               child: Container(
                                 margin:
                                     const EdgeInsets.symmetric(horizontal: 8.0),
-                                height: 150, // Adjust height as needed
+                                height: 150,  
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextField(
