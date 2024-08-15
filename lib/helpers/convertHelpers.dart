@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 class ConvertHelpers {
   bool checkIsJsonValid(String data) {
     try {
-      jsonDecode(data);
+      print(jsonDecode(data));
+
       print("VALID JSON");
       return true;
     } catch (e) {
@@ -32,10 +33,77 @@ class ConvertHelpers {
   List<String> dataTypes = ['String', 'int', 'bool', 'List', 'Map', 'dynamic'];
 
   String generateModelClasses(String rootClassName, Map<String, dynamic> json) {
+    print("JSON : ");
+    print(json);
+
     classCache.clear();
     _generateModelClassStructureCache(rootClassName, json);
     _generateModelClasses();
     return stringBuffer.toString();
+  }
+
+  String generateModelClassesInputIsList(
+      String rootClassName, List<dynamic> jsonList) {
+    print("JSON : ");
+    print(jsonList);
+
+    classCache.clear();
+    _generateModelClassStructureCacheForList(rootClassName, jsonList);
+    _generateModelClasses();
+    return stringBuffer.toString();
+  }
+
+  void _generateModelClassStructureCacheForList(
+      String rootClassName, List<dynamic> jsonList) {
+    // if (classCache.containsKey(rootClassName)) {
+    //   return;
+    // }
+    classCache[rootClassName] = {};
+    int maxAttributesIndex = 0;
+    // jsonList.forEach((key) {
+    for (int i = 0; i < jsonList.length; i++) {
+      Map<String, dynamic> dataInMap = jsonList[i] as Map<String, dynamic>;
+      if (dataInMap.entries.length >
+          (jsonList[maxAttributesIndex] as Map<String, dynamic>)
+              .entries
+              .length) {
+        maxAttributesIndex = i;
+      }
+    }
+    Map<String, dynamic> json =
+        jsonList[maxAttributesIndex] as Map<String, dynamic>;
+    json.forEach((key, value) {
+      print(key);
+
+      String valueType = "dynamic";
+      if (value is String) {
+        valueType = "String";
+        // print("Is String");
+        // return String;
+      } else if (value is int) {
+        valueType = "int";
+        // print("Is Int");
+      } else if (value is double) {
+        valueType = "double";
+        // print("Is Double");
+      } else if (value is bool) {
+        valueType = "bool";
+        // print("Is Bool");
+      } else if (value is List) {
+        valueType = "List<dynamic>";
+        // print("Is Bool");
+      } else if (value is Map) {
+        valueType = key + "Model";
+        _generateModelClassStructureCache(key + "Model", value);
+        // print("Is Map");
+      } else {
+        valueType = "dynamic";
+        // print("Is dynamic");
+      }
+    Map<dynamic, dynamic> valueOfClass = classCache[rootClassName];
+    valueOfClass[key] = valueType;
+    });
+    print(classCache);
   }
 
   void _generateModelClasses() {
@@ -123,138 +191,4 @@ class ConvertHelpers {
     });
     print(classCache);
   }
-  // void _generateModelClass(String className, dynamic json) {
-  //   if (classCache.containsKey(className)) return;
-
-  //   StringBuffer buffer = StringBuffer();
-  //   Map<String, String> typeMap = {};
-
-  //   // Start the class
-  //   stringBuffer.writeln('class $className {');
-
-  //   // Generate class properties
-  //   if (json is Map<String, dynamic>) {
-  //     json.forEach((key, value) {
-  //       try {
-  //         String type = _getDartType(value, typeMap);
-  //         stringBuffer.writeln('  $type? $key;');
-  //       } catch (e) {
-  //         print('Error generating property for $key: $e');
-  //       }
-  //     });
-  //   }
-
-  //   // Constructor
-  //   stringBuffer.writeln();
-  //   stringBuffer.writeln('  $className({');
-  //   if (json is Map<String, dynamic>) {
-  //     json.forEach((key, value) {
-  //       stringBuffer.writeln('    this.$key,');
-  //     });
-  //   }
-  //   stringBuffer.writeln('  });');
-
-  //   // From JSON
-  //   stringBuffer.writeln();
-  //   stringBuffer.writeln('  factory $className.fromJson(Map<String, dynamic> json) {');
-  //   stringBuffer.writeln('    return $className(');
-  //   if (json is Map<String, dynamic>) {
-  //     json.forEach((key, value) {
-  //       try {
-  //         String type = typeMap[key]!;
-  //         if (type.startsWith('List<')) {
-  //           stringBuffer.writeln('      $key: json[\'$key\'] != null ? (json[\'$key\'] as List).map((i) => ${_getNestedClassName(type)}.fromJson(i as Map<String, dynamic>)).toList() : null,');
-  //         } else if (type.startsWith('Map<')) {
-  //           stringBuffer.writeln('      $key: json[\'$key\'] != null ? ${_getNestedClassName(type)}.fromJson(json[\'$key\'] as Map<String, dynamic>) : null,');
-  //         } else {
-  //           stringBuffer.writeln('      $key: json[\'$key\'],');
-  //         }
-  //       } catch (e) {
-  //         print('Error in fromJson for $key: $e');
-  //       }
-  //     });
-  //   }
-  //   stringBuffer.writeln('    );');
-  //   stringBuffer.writeln('  }');
-
-  //   // To JSON
-  //   stringBuffer.writeln();
-  //   stringBuffer.writeln('  Map<String, dynamic> toJson() {');
-  //   stringBuffer.writeln('    final Map<String, dynamic> data = <String, dynamic>{};');
-  //   if (json is Map<String, dynamic>) {
-  //     json.forEach((key, value) {
-  //       try {
-  //         String type = typeMap[key]!;
-  //         if (type.startsWith('List<')) {
-  //           stringBuffer.writeln('    if (this.$key != null) {');
-  //           stringBuffer.writeln('      data[\'$key\'] = this.$key!.map((v) => v.toJson()).toList();');
-  //           stringBuffer.writeln('    }');
-  //         } else if (type.startsWith('Map<')) {
-  //           stringBuffer.writeln('    if (this.$key != null) {');
-  //           stringBuffer.writeln('      data[\'$key\'] = this.$key!.toJson();');
-  //           stringBuffer.writeln('    }');
-  //         } else {
-  //           stringBuffer.writeln('    data[\'$key\'] = this.$key;');
-  //         }
-  //       } catch (e) {
-  //         print('Error in toJson for $key: $e');
-  //       }
-  //     });
-  //   }
-  //   stringBuffer.writeln('    return data;');
-  //   stringBuffer.writeln('  }');
-
-  //   stringBuffer.writeln('}');
-
-  //   // Cache the generated class
-  //   classCache[className] = stringBuffer.toString();
-
-  //   // Generate additional classes for nested types
-  //   typeMap.forEach((key, type) {
-  //     if (type.startsWith('List<') || type.startsWith('Map<')) {
-  //       String nestedClassName = _getNestedClassName(type);
-  //       if (nestedClassName.isNotEmpty) {
-  //         dynamic nestedJson = {};
-  //         if (json is Map && json[key] is List && (json[key] as List).isNotEmpty) {
-  //           nestedJson = (json[key] as List).first;
-  //         } else if (json is Map && json[key] is Map) {
-  //           nestedJson = json[key];
-  //         }
-  //         if (nestedJson.isNotEmpty) {
-  //           _generateModelClass(nestedClassName, nestedJson);
-  //         }
-  //       }
-  //     }
-  //   });
-  // }
-
-  // String _getDartType(dynamic value, Map<String, String> typeMap) {
-  //   if (value is String) return 'String';
-  //   if (value is int) return 'int';
-  //   if (value is double) return 'double';
-  //   if (value is bool) return 'bool';
-  //   if (value is List) {
-  //     if (value.isNotEmpty) {
-  //       String itemType = _getDartType(value.first, typeMap);
-  //       typeMap['List<dynamic>'] = 'List<$itemType>';
-  //       return 'List<$itemType>';
-  //     }
-  //     return 'List<dynamic>';
-  //   }
-  //   if (value is Map) {
-  //     String nestedClassName = 'NestedClass${classCache.length + 1}';
-  //     typeMap['Map<String, dynamic>'] = nestedClassName;
-  //     return nestedClassName;
-  //   }
-  //   return 'dynamic';
-  // }
-
-  // String _getNestedClassName(String type) {
-  //   RegExp regExp = RegExp(r'List<(\w+)>|Map<(\w+)>');
-  //   Match? match = regExp.firstMatch(type);
-  //   if (match != null) {
-  //     return match.group(1) ?? match.group(2) ?? '';
-  //   }
-  //   return '';
-  // }
 }

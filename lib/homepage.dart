@@ -1,8 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:json2model/helpers/convertHelpers.dart';
+import 'helpers/download_helpers.dart'
+    if (dart.library.html) 'helpers/web_download_helpers.dart' as my_worker;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,9 +21,40 @@ class _HomePageState extends State<HomePage> {
     await Clipboard.setData(ClipboardData(text: _modelTextController.text));
     ConvertHelpers().showSnackBar("Model Copied.", context, 1);
   }
-  void downloadModelFile(){
-    ConvertHelpers().showSnackBar("Coming Soon..", context, 1);
+
+  void downloadModelFile() async {
+    my_worker.downloadModelFile(_modelTextController.text, context);
+    // String modelCode = _modelTextController.text;
+    // if (kIsWeb) {
+    //   print("DOWNLOADING FOR WEB");
+    //   // Web platform
+    //   final bytes = utf8.encode(modelCode);
+    //   final blob = html.Blob([Uint8List.fromList(bytes)]);
+    //   final url = html.Url.createObjectUrlFromBlob(blob);
+
+    //   final anchor = html.AnchorElement(href: url)
+    //     ..setAttribute('download', 'json2model.dart')
+    //     ..click();
+
+    //   html.Url.revokeObjectUrl(url);
+
+    //   ConvertHelpers().showSnackBar("Model file downloaded", context, 1);
+    // } else if (io.Platform.isAndroid || io.Platform.isIOS) {
+    //   // Mobile platform
+    //   // Mobile platforms do not support file downloads directly, so you will need to use plugins like `flutter_downloader` or `path_provider`
+    //   ConvertHelpers().showSnackBar(
+    //       "File download is not supported on mobile platforms.", context, 2);
+    // } else {
+    //   // Desktop platforms (Windows, macOS, Linux)
+    //   // For desktop platforms, you can use `dart:io` to write files
+    //   // final file = io.File('path/to/your/directory/json2model.dart');
+    //   // await file.writeAsString(modelCode);
+
+    //   // ConvertHelpers().showSnackBar("Model file downloaded to ${file.path}", context, 1);
+    // }
+    // ConvertHelpers().showSnackBar("Coming Soon..", context, 1);
   }
+
   void convertData() async {
     print("CONVERT BIG");
     if (_isConverting) {
@@ -45,12 +77,16 @@ class _HomePageState extends State<HomePage> {
         return;
       }
       print("TILL HERE");
-      Map<String, dynamic> jsonData =
-          jsonDecode(_jsonTextController.text.trim());
+      dynamic jsonData = jsonDecode(_jsonTextController.text.trim());
       print("JSON DATA");
-
-      String dataAfterConverting =
-          await ConvertHelpers().generateModelClasses("ModelName", jsonData);
+      String dataAfterConverting = "";
+      if (jsonData is Map) {
+        dataAfterConverting = await ConvertHelpers().generateModelClasses(
+            "ModelName", jsonData as Map<String, dynamic>);
+      } else if (jsonData is List<dynamic>) {
+        dataAfterConverting = await ConvertHelpers()
+            .generateModelClassesInputIsList("ModelName", jsonData);
+      }
       print(dataAfterConverting);
       _modelTextController.text = dataAfterConverting;
     } else {
@@ -220,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                                     decoration: InputDecoration(
                                       hintStyle:
                                           TextStyle(fontSize: width * 0.02),
-                                      hintText: "Enter text here",
+                                      hintText: "Enter JSON here",
                                       border: InputBorder.none,
                                     ),
                                     maxLines: null,
@@ -269,31 +305,41 @@ class _HomePageState extends State<HomePage> {
                                         Wrap(
                                           spacing: 5,
                                           children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue[100],
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                            GestureDetector(
+                                              onTap: () {
+                                                copyModel();
+                                              },
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                height: width * 0.03,
+                                                width: width * 0.03,
+                                                child: Center(
+                                                  child: Icon(Icons.copy,
+                                                      color: Colors.white,
+                                                      size: width * 0.015),
+                                                ),
                                               ),
-                                              height: width * 0.03,
-                                              width: width * 0.03,
-                                              child: Center(
-                                                child: Icon(Icons.copy,
+                                            ),
+                                            GestureDetector(
+                                              onTap: () {
+                                                downloadModelFile();
+                                              },
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                height: width * 0.03,
+                                                width: width * 0.03,
+                                                child: Icon(Icons.download,
                                                     color: Colors.white,
                                                     size: width * 0.015),
                                               ),
-                                            ),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue[100],
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              height: width * 0.03,
-                                              width: width * 0.03,
-                                              child: Icon(Icons.download,
-                                                  color: Colors.white,
-                                                  size: width * 0.015),
                                             ),
                                           ],
                                         ),
@@ -319,7 +365,7 @@ class _HomePageState extends State<HomePage> {
                                     decoration: InputDecoration(
                                       hintStyle:
                                           TextStyle(fontSize: width * 0.02),
-                                      hintText: "Enter additional text here",
+                                      hintText: "Model will be displayed here",
                                       border: InputBorder.none,
                                     ),
                                     maxLines: null,
