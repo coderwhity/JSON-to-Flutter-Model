@@ -8,9 +8,9 @@ void main() async {
   if (!kIsWeb) {
     await FlutterDownloader.initialize(
         debug:
-            true, // optional: set to false to disable printing logs to console (default: true)
+            true,
         ignoreSsl:
-            true // option: set to false to disable working with http links (default: false)
+            true
         );
   }
   runApp(const MyApp());
